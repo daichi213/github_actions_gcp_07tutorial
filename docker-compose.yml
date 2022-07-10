@@ -1,0 +1,19 @@
+version: '3'
+services:
+  db:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      TZ: 'Asia/Tokyo'
+  app:
+    build:
+      context: ./sample_app
+    ports:
+      - 3000:3000
+    # command: export SECRET_KEY_BASE=`bundle exec rake secret` && bundle exec puma -t 5:5 -p 3000 -e production -C config/puma.rb
+    volumes:
+      - ./sample_app:/var/www/sample_app
+    stdin_open: true
+    tty: true
+    depends_on:
+      - db
