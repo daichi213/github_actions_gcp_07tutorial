@@ -12,9 +12,9 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v3
-    # For Debugging
-    # - name: Setup tmate session
-    #   uses: mxschmitt/action-tmate@v3
+    For Debugging
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
     - name: Run the test code on Rails App with Rspec
       run: |
         echo "The Container is building..."
