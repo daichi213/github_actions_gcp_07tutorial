@@ -13,4 +13,4 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
     - name: Run the test
-      uses: ./.github/workflows/test.yml
+      uses: ./.github/workflows/subflows/test.yml
