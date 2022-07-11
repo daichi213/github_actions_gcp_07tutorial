@@ -12,6 +12,7 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v3
+    # For Debugging
     # - name: Setup tmate session
     #   uses: mxschmitt/action-tmate@v3
     - name: Run the test code on Rails App with Rspec
@@ -21,7 +22,7 @@ jobs:
         echo "The Container is successfully built!"
         echo "test is running..."
         docker-compose up -d
-        docker-compose exec app rails db:create
-        docker-compose exec app rails db:migrate
-        docker-compose exec app rspec
+        docker-compose exec -T app rails db:create
+        docker-compose exec -T app rails db:migrate
+        docker-compose exec -T app rspec
         echo "The test is successfully finished!"
