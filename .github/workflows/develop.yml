@@ -13,4 +13,4 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
     - name: Run the test
-      uses: /home/runner/work/github_actions_gcp_07tutorial/.github/workflows/test.yml
+      uses: github_actions_gcp_07tutorial/.github/workflows/test.yml
