@@ -1,0 +1,20 @@
+name: Test Workflow
+
+on:
+  push:
+    branches-ignore: ["*"]
+  workflow_call:
+
+jobs:
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Run the test code on Rails App with Rspec
+      run: |
+        echo "The Container is building..."
+        docker-compose build
+        echo "The Container is successfully built!"
+        echo "test is running..."
+        docker-compose run app rspec
+        echo "The test is successfully finished!"
