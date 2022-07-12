@@ -17,7 +17,6 @@ jobs:
     #   uses: mxschmitt/action-tmate@v3
 
     - name: Building the Docker Container
-      id: Building the Docker Container
       run: |
         echo "The Container is building..."
         docker-compose build
@@ -26,15 +25,12 @@ jobs:
         docker-compose up -d
 
     - name: Wait middleware services
-      id: wait-middleware
       run: docker-compose run --rm wait-middleware
 
     - name: Confirm docker-compose logs
-      id: confirm-docker-compose-logs
       run: docker-compose logs db
 
     - name: Run the test code on Rails App with Rspec
-      id: Run the test code on Rails App with Rspec
       run: |
         echo "test is running..."
         docker-compose exec -T server rails db:create
@@ -49,14 +45,12 @@ jobs:
   #     DEVELOPMENT_DNS: DEVELOPMENT_DNS
   #   steps:
   #   - name: Download the jq
-  #     id: Download the jq
   #     run: |
   #       echo "jq is downloading..."
   #       apt-get update
   #       apt-get install -y jq
   #       echo "jq is successfully downloaded!"
   #   - name: Get the dns of development server
-  #     id: Get the dns of development server
   #     # TODO dnsの取得コマンドはインスタンスを作成したtfstateを参照しながらコマンドを作成する
   #     run: |
   #       echo "Getting the dns of development server..."
@@ -64,7 +58,6 @@ jobs:
   #       export DEVELOPMENT_DNS
   #       echo "The dns of development server is successfully get!"
   #   - name: Deploy to the Development server via ssh
-  #     id: Deploy to the Development server via ssh
   #     # TODO dnsの取得コマンドはインスタンスを作成したtfstateを参照しながらコマンドを作成する
   #     run: |
   #       echo "Logging in the Development server via ssh..."
