@@ -15,6 +15,7 @@ services:
       WAIT_HOSTS: db:3306
     ports:
       - 3000:3000
+    command: /wait
     # command: export SECRET_KEY_BASE=`bundle exec rake secret` && bundle exec puma -t 5:5 -p 3000 -e production -C config/puma.rb
     volumes:
       - ./sample_app:/var/www/sample_app
