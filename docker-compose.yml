@@ -2,6 +2,8 @@ version: '3'
 services:
   db:
     image: mysql:5.7
+    ports:
+      - 3000:3000
     environment:
       MYSQL_ROOT_PASSWORD: password
       TZ: 'Asia/Tokyo'
@@ -9,6 +11,8 @@ services:
     build:
       context: ./sample_app
       dockerfile: Dockerfile
+    environment:
+      WAIT_HOSTS: db:3306
     ports:
       - 3000:3000
     # command: export SECRET_KEY_BASE=`bundle exec rake secret` && bundle exec puma -t 5:5 -p 3000 -e production -C config/puma.rb

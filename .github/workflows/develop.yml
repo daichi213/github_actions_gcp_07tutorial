@@ -22,9 +22,6 @@ jobs:
         echo "The Container is successfully built!"
         echo "test is running..."
         docker-compose up -d
-        echo `docker ps`
-        echo "dbのホストが存在するか確認"
-        echo `docker-compose exec -T db printenv`
         docker-compose exec -T app rails db:create
         docker-compose exec -T app rails db:migrate
         docker-compose exec -T app rspec
