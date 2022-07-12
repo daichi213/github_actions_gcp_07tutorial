@@ -15,14 +15,38 @@ jobs:
     # For Debugging
     # - name: Setup tmate session
     #   uses: mxschmitt/action-tmate@v3
-    - name: Run the test code on Rails App with Rspec
+
+    # - name: Wait middleware services
+    #   id: wait-middleware
+    #   run: docker-compose run --rm wait-middleware
+
+    # - name: Confirm docker-compose logs
+    #   id: confirm-docker-compose-logs
+    #   run: docker-compose logs db
+
+    # - name: Run the test code on Rails App with Rspec
+    #   run: |
+    #     echo "The Container is building..."
+    #     docker-compose build
+    #     echo "The Container is successfully built!"
+    #     echo "test is running..."
+    #     docker-compose up -d
+    #     docker-compose exec -T app rails db:create
+    #     docker-compose exec -T app rails db:migrate
+    #     docker-compose exec -T app rspec
+    #     echo "The test is successfully finished!"
+
+    - name: Building the Docker Container
       run: |
         echo "The Container is building..."
         docker-compose build
         echo "The Container is successfully built!"
-        echo "test is running..."
+        echo "Containers are building..."
         docker-compose up -d
-        docker-compose exec -T app rails db:create
-        docker-compose exec -T app rails db:migrate
-        docker-compose exec -T app rspec
+    - name: Run the test code on Rails App with Rspec
+      run: |
+        echo "test is running..."
+        docker-compose exec -T server rails db:create
+        docker-compose exec -T server rails db:migrate
+        docker-compose exec -T server rspec
         echo "The test is successfully finished!"

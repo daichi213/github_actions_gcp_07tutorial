@@ -7,27 +7,30 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: password
       TZ: 'Asia/Tokyo'
-  mw:
-    build:
-      context: ./
-      dockerfile: Dockerfile
-    environment:
-      WAIT_HOSTS: db:3306
-    command: /wait
-    depends_on:
-      - db
-  app:
+  app: &app
     build:
       context: ./sample_app
       dockerfile: Dockerfile
-    environment:
-      WAIT_HOSTS: db:3306
-    ports:
-      - 3000:3000
-    command: bash -c "rails s -b 0.0.0.0"
     volumes:
       - ./sample_app:/var/www/sample_app
     stdin_open: true
     tty: true
     depends_on:
       - db
+  wait-middleware: &wait-middleware
+    <<: *app
+    environment:
+      WAIT_HOSTS: db:3306
+    depends_on:
+      - db
+    command: /wait
+  console:
+    <<: *app
+    ports:
+      - 3000:3000
+    command: /bin/bash
+  server:
+    <<: *app
+    ports:
+      - 3030:3000
+    command: bash -c "rm -f tmp/pids/server.pid && rails s -b 0.0.0.0"
