@@ -7,7 +7,7 @@ on:
     branches: [ "develop" ]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
@@ -17,6 +17,7 @@ jobs:
     #   uses: mxschmitt/action-tmate@v3
 
     - name: Building the Docker Container
+      id: Building the Docker Container
       run: |
         echo "The Container is building..."
         docker-compose build
@@ -33,9 +34,39 @@ jobs:
       run: docker-compose logs db
 
     - name: Run the test code on Rails App with Rspec
+      id: Run the test code on Rails App with Rspec
       run: |
         echo "test is running..."
         docker-compose exec -T server rails db:create
         docker-compose exec -T server rails db:migrate
         docker-compose exec -T server rspec
         echo "The test is successfully finished!"
+
+  # deploy:
+  #   needs: [test]
+  #   runs-on: ubuntu-latest
+  #   env:
+  #     DEVELOPMENT_DNS: DEVELOPMENT_DNS
+  #   steps:
+  #   - name: Download the jq
+  #     id: Download the jq
+  #     run: |
+  #       echo "jq is downloading..."
+  #       apt-get update
+  #       apt-get install -y jq
+  #       echo "jq is successfully downloaded!"
+  #   - name: Get the dns of development server
+  #     id: Get the dns of development server
+  #     # TODO dnsの取得コマンドはインスタンスを作成したtfstateを参照しながらコマンドを作成する
+  #     run: |
+  #       echo "Getting the dns of development server..."
+  #       DEVELOPMENT_DNS=`cat *tfstate | jq '.resources[] | select(.type == "aws_codecommit_repository") | .instances[] | .attributes | .clone_url_http'`
+  #       export DEVELOPMENT_DNS
+  #       echo "The dns of development server is successfully get!"
+  #   - name: Deploy to the Development server via ssh
+  #     id: Deploy to the Development server via ssh
+  #     # TODO dnsの取得コマンドはインスタンスを作成したtfstateを参照しながらコマンドを作成する
+  #     run: |
+  #       echo "Logging in the Development server via ssh..."
+  #       ssh ec2-user@${DEVELOPMENT_DNS}
+  #       echo "Logged in successfully the Development server via ssh!"
