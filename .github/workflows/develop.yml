@@ -43,6 +43,15 @@ jobs:
         echo "The Container is successfully built!"
         echo "Containers are building..."
         docker-compose up -d
+
+    - name: Wait middleware services
+      id: wait-middleware
+      run: docker-compose run --rm wait-middleware
+
+    - name: Confirm docker-compose logs
+      id: confirm-docker-compose-logs
+      run: docker-compose logs db
+
     - name: Run the test code on Rails App with Rspec
       run: |
         echo "test is running..."
