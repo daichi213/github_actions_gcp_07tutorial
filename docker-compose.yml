@@ -9,7 +9,8 @@ services:
       TZ: 'Asia/Tokyo'
   mw:
     build:
-      dockerfile: ./Dockerfile
+      context: ./
+      dockerfile: Dockerfile
     environment:
       WAIT_HOSTS: db:3306
     command: /wait
