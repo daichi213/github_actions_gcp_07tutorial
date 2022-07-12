@@ -8,6 +8,7 @@ services:
   app:
     build:
       context: ./sample_app
+      dockerfile: Dockerfile
     ports:
       - 3000:3000
     # command: export SECRET_KEY_BASE=`bundle exec rake secret` && bundle exec puma -t 5:5 -p 3000 -e production -C config/puma.rb
