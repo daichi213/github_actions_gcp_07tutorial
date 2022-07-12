@@ -7,6 +7,14 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: password
       TZ: 'Asia/Tokyo'
+  mw:
+    build:
+      dockerfile: ./Dockerfile
+    environment:
+      WAIT_HOSTS: db:3306
+    command: /wait
+    depends_on:
+      - db
   app:
     build:
       context: ./sample_app
@@ -15,8 +23,7 @@ services:
       WAIT_HOSTS: db:3306
     ports:
       - 3000:3000
-    command: /wait
-    # command: export SECRET_KEY_BASE=`bundle exec rake secret` && bundle exec puma -t 5:5 -p 3000 -e production -C config/puma.rb
+    command: bash -c "rails s -b 0.0.0.0"
     volumes:
       - ./sample_app:/var/www/sample_app
     stdin_open: true
