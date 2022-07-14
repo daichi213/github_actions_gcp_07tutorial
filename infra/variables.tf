@@ -7,17 +7,16 @@ variable "aws_secret_key" {}
 ## region
 variable "aws_region" {}
 
-## aws account reference
-data "aws_caller_identity" "current" {}
-
-## repository name
-variable "repo_name" {}
-
-## repository description
-variable "repo_description" {}
-
 ## aws app runner service name
 variable "service_name" {}
 
-# CICD 実施結果の通知先
-variable "email_destination" {}
+# Spot Instance number
+variable "spot_instance_num" {}
+
+variable "spot_instance_ami" {}
+
+variable "spot_instance_type" {}
+
+variable "gp2_volume_size" {}
+
+variable "gp2_volume_type" {}

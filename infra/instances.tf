@@ -1,9 +1,20 @@
+locals {
+
+  dev_instance = {
+    name = "${var.service_name}_dev_instance"
+  }
+  prod_instance = {
+    name = "${var.service_name}_prod_instance"
+  }
+
+}
+
 # ====================
 #
 # VPC
 #
 # ====================
-resource "aws_vpc" "locker_app_vpc" {
+resource "aws_vpc" "myapp_vpc" {
   cidr_block                       = "10.1.0.0/16"
   enable_dns_hostnames             = true
   enable_dns_support               = true
@@ -11,7 +22,7 @@ resource "aws_vpc" "locker_app_vpc" {
   assign_generated_ipv6_cidr_block = true
 
   tags = {
-    Name = "locker_app_vpc"
+    Name = "${var.service_name}_vpc"
   }
 }
 
@@ -20,11 +31,11 @@ resource "aws_vpc" "locker_app_vpc" {
 # Internet Gateway
 #
 # ====================
-resource "aws_internet_gateway" "locker_app_gateway" {
-  vpc_id = aws_vpc.locker_app_vpc.id
+resource "aws_internet_gateway" "internet_gw" {
+  vpc_id = aws_vpc.myapp_vpc.id
 
   tags = {
-    Name = "locker_app_gateway"
+    Name = "${var.service_name}_gw"
   }
 }
 # ====================
@@ -33,8 +44,9 @@ resource "aws_internet_gateway" "locker_app_gateway" {
 #
 # ====================
 resource "aws_subnet" "public_1a" {
-  vpc_id            = "${aws_vpc.locker_app_vpc.id}"
-  cidr_block        = cidrsubnet(aws_vpc.locker_app_vpc.cidr_block, 8, 1)
+  vpc_id = aws_vpc.myapp_vpc.id
+  # TODO 修正
+  cidr_block        = "10.1.0.0/24"
   availability_zone = "ap-northeast-1a"
   # trueにするとインスタンスにパブリックIPアドレスを自動的に割り当ててくれる
   map_public_ip_on_launch = false
@@ -44,9 +56,21 @@ resource "aws_subnet" "public_1a" {
   }
 }
 
+resource "aws_subnet" "public_1b" {
+  vpc_id            = aws_vpc.myapp_vpc.id
+  cidr_block        = "10.1.20.0/24"
+  availability_zone = "ap-northeast-1b"
+  # trueにするとインスタンスにパブリックIPアドレスを自動的に割り当ててくれる
+  map_public_ip_on_launch = false
+
+  tags = {
+    Name = "public_1b"
+  }
+}
+
 resource "aws_subnet" "public_1c" {
-  vpc_id            = "${aws_vpc.locker_app_vpc.id}"
-  cidr_block        = cidrsubnet(aws_vpc.locker_app_vpc.cidr_block, 8, 4)
+  vpc_id            = aws_vpc.myapp_vpc.id
+  cidr_block        = "10.1.30.0/24"
   availability_zone = "ap-northeast-1c"
   # trueにするとインスタンスにパブリックIPアドレスを自動的に割り当ててくれる
   map_public_ip_on_launch = false
@@ -56,58 +80,47 @@ resource "aws_subnet" "public_1c" {
   }
 }
 
-resource "aws_subnet" "public_1d" {
-  vpc_id            = "${aws_vpc.locker_app_vpc.id}"
-  cidr_block        = cidrsubnet(aws_vpc.locker_app_vpc.cidr_block, 8, 7)
-  availability_zone = "ap-northeast-1a"
-  # trueにするとインスタンスにパブリックIPアドレスを自動的に割り当ててくれる
-  map_public_ip_on_launch = false
-
-  tags = {
-    Name = "public_1d"
-  }
-}
-
 
 # ====================
 #
 # Route Table
 #
 # ====================
-resource "aws_route_table" "locker_app_route_table" {
-  vpc_id = aws_vpc.locker_app_vpc.id
+resource "aws_route_table" "myapp_route_table" {
+  vpc_id = aws_vpc.myapp_vpc.id
 
   tags = {
-    Name = "locker_app_route_table"
+    Name = "${var.service_name}_route_table"
   }
 }
 
-resource "aws_route" "locker_app_route" {
-  gateway_id             = aws_internet_gateway.locker_app_gateway.id
-  route_table_id         = aws_route_table.locker_app_route_table.id
+resource "aws_route" "my_app_route" {
+  gateway_id             = aws_internet_gateway.internet_gw.id
+  route_table_id         = aws_route_table.myapp_route_table.id
   destination_cidr_block = "0.0.0.0/0"
 }
 
 resource "aws_route_table_association" "example" {
-  subnet_id      = "${aws_subnet.public_1a.id}"
-  route_table_id = "${aws_route_table.locker_app_route_table.id}"
+  subnet_id      = aws_subnet.public_1a.id
+  route_table_id = aws_route_table.myapp_route_table.id
 }
 
 resource "aws_route_table_association" "pubic_1c" {
-  subnet_id      = "${aws_subnet.public_1c.id}"
-  route_table_id = "${aws_route_table.locker_app_route_table.id}"
+  subnet_id      = aws_subnet.public_1c.id
+  route_table_id = aws_route_table.myapp_route_table.id
 }
+
 # ====================
 #
 # Security Group
 #
 # ====================
 resource "aws_security_group" "security_rule" {
-  vpc_id = aws_vpc.locker_app_vpc.id
-  name   = "security_rule"
+  vpc_id = aws_vpc.myapp_vpc.id
+  name   = "${var.service_name}_security_rule"
 
   tags = {
-    Name = "security_rule"
+    Name = "${var.service_name}_security_rule"
   }
 }
 
@@ -141,16 +154,6 @@ resource "aws_security_group_rule" "in_http" {
   protocol          = "tcp"
 }
 
-# インバウンドルール(httpsアクセス用)
-resource "aws_security_group_rule" "in_https" {
-  security_group_id = aws_security_group.security_rule.id
-  type              = "ingress"
-  cidr_blocks       = ["0.0.0.0/0"]
-  from_port         = 443
-  to_port           = 443
-  protocol          = "tcp"
-}
-
 # アウトバウンドルール(全開放)
 resource "aws_security_group_rule" "out_all" {
   security_group_id = aws_security_group.security_rule.id
@@ -166,29 +169,119 @@ resource "aws_security_group_rule" "out_all" {
 # Elastic IP
 #
 # ====================
-resource "aws_eip" "my_eip" {
-  instance   = aws_instance.locker_app_instance.id
+resource "aws_eip" "dev_eip" {
+  instance   = aws_spot_fleet_request.spot_instance_dev.id
   vpc        = true
-  depends_on = [aws_internet_gateway.locker_app_gateway]
+  depends_on = [aws_internet_gateway.internet_gw]
+}
+
+resource "aws_eip" "prod_eip" {
+  instance   = aws_spot_fleet_request.spot_instance_prod.id
+  vpc        = true
+  depends_on = [aws_internet_gateway.internet_gw]
+}
+# ====================
+#
+# EC2 Instance Develop
+#
+# ====================
+# resource "aws_instance" "locker_app_instance" {
+#   ami                    = "ami-0ce107ae7af2e92b5"
+#   vpc_security_group_ids = [aws_security_group.security_rule.id]
+#   subnet_id              = aws_subnet.public_1a.id
+#   key_name               = aws_key_pair.my_key_pair.id
+#   instance_type          = "t2.micro"
+#   monitoring             = false
+#   tags = {
+#     Name = "${var.service_name}_development"
+#   }
+#   lifecycle {
+#     prevent_destroy = true
+#   }
+# }
+
+# ====================
+#
+# EC2 Instance Production
+#
+# ====================
+# resource "aws_instance" "locker_app_instance" {
+#   ami                    = "ami-0ce107ae7af2e92b5"
+#   vpc_security_group_ids = [aws_security_group.security_rule.id]
+#   subnet_id              = aws_subnet.public_1a.id
+#   key_name               = aws_key_pair.my_key_pair.id
+#   instance_type          = "t2.micro"
+#   monitoring             = false
+#   tags = {
+#     Name = "${var.service_name}_production"
+#   }
+#   lifecycle {
+#     prevent_destroy = true
+#   }
+# }
+
+
+# ====================
+#
+# EC2 Spot Instance Development
+#
+# ====================
+resource "aws_spot_fleet_request" "spot_instance_dev" {
+  iam_fleet_role = aws_iam_role.instance_role.arn
+
+  # spot_price      = "0.1290" # Max Price デフォルトはOn-demand Price
+  target_capacity                     = var.spot_instance_num
+  terminate_instances_with_expiration = true
+  wait_for_fulfillment                = "true" # fulfillするまでTerraformが待つ
+
+  launch_specification {
+    ami                         = var.spot_instance_ami
+    instance_type               = var.spot_instance_type
+    key_name                    = aws_key_pair.my_key_pair.key_name
+    vpc_security_group_ids      = ["${aws_security_group.security_rule.id}"]
+    subnet_id                   = aws_subnet.public_1a.id
+    associate_public_ip_address = true
+
+    root_block_device {
+      volume_size = var.gp2_volume_size
+      volume_type = var.gp2_volume_type
+    }
+
+    tags {
+      Name = local.dev_instance.name
+    }
+  }
 }
 
 # ====================
 #
-# EC2 Instance
+# EC2 Spot Instance Production
 #
 # ====================
-resource "aws_instance" "locker_app_instance" {
-  ami                    = "ami-0ce107ae7af2e92b5"
-  vpc_security_group_ids = [aws_security_group.security_rule.id]
-  subnet_id              = aws_subnet.public_1a.id
-  key_name               = aws_key_pair.my_key_pair.id
-  instance_type          = "t2.micro"
-  monitoring             = false
-  tags = {
-    Name = "locker_app_instance"
-  }
-  lifecycle {
-    prevent_destroy = true
+resource "aws_spot_fleet_request" "spot_instance_prod" {
+  iam_fleet_role = aws_iam_role.instance_role.arn
+
+  # spot_price      = "0.1290" # Max Price デフォルトはOn-demand Price
+  target_capacity                     = var.spot_instance_num
+  terminate_instances_with_expiration = true
+  wait_for_fulfillment                = "true" # fulfillするまでTerraformが待つ
+
+  launch_specification {
+    ami                         = var.spot_instance_ami
+    instance_type               = var.spot_instance_type
+    key_name                    = aws_key_pair.my_key_pair.key_name
+    vpc_security_group_ids      = ["${aws_security_group.security_rule.id}"]
+    subnet_id                   = aws_subnet.public_1a.id
+    associate_public_ip_address = true
+
+    root_block_device {
+      volume_size = var.gp2_volume_size
+      volume_type = var.gp2_volume_type
+    }
+
+    tags {
+      Name = local.prod_instance.name
+    }
   }
 }
 
@@ -198,129 +291,6 @@ resource "aws_instance" "locker_app_instance" {
 #
 # ====================
 resource "aws_key_pair" "my_key_pair" {
-  key_name   = "my-key-pair"
-  public_key = file("./my-key-pair.pub")
-}
-
-
-# ====================
-#
-# SSL化手続き
-#
-# ====================
-resource "aws_route53_zone" "route53-zone" {
-  name = "lockerappli.com"
-  # private_zone = false
-}
-
-data "aws_route53_zone" "route53-zone" {
-  name = "lockerappli.com"
-  # private_zone = false
-}
-
-resource "aws_acm_certificate" "cert" {
-  # private_key       = tls_private_key.ssl_key_type.private_key_pem
-  # certificate_body  = tls_self_signed_cert.ssl_key.cert_pem
-  domain_name       = "www.lockerappli.com"
-  validation_method = "DNS"
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-resource "aws_route53_record" "www" {
-  zone_id = aws_route53_zone.route53-zone.zone_id
-  name    = "www.lockerappli.com"
-  type    = "A"
-
-  alias {
-    name                   = aws_lb.myalb.dns_name
-    zone_id                = aws_lb.myalb.zone_id
-    evaluate_target_health = true
-  }
-}
-
-resource "aws_route53_record" "cert_validation" {
-  for_each = {
-    for dvo in aws_acm_certificate.cert.domain_validation_options : dvo.domain_name => {
-      name   = dvo.resource_record_name
-      record = dvo.resource_record_value
-      type   = dvo.resource_record_type
-    }
-  }
-
-  allow_overwrite = true
-  zone_id         = data.aws_route53_zone.route53-zone.zone_id
-  name            = each.value.name
-  type            = each.value.type
-  records         = [each.value.record]
-  ttl             = 60
-}
-
-# ACM証明書とCNAMEレコードの連携
-resource "aws_acm_certificate_validation" "cert" {
-  certificate_arn         = aws_acm_certificate.cert.arn
-  validation_record_fqdns = [for record in aws_route53_record.cert_validation : record.fqdn]
-}
-
-data "aws_subnet_ids" "subs" {
-  vpc_id = "${aws_vpc.locker_app_vpc.id}"
-}
-
-# ELBは異なるアベイラビリティゾーンに割り当てたsubnetをそれぞれ2つ以上指定する必要がある
-resource "aws_lb" "myalb" {
-  name                       = "myalb"
-  load_balancer_type         = "application"
-  internal                   = false
-  idle_timeout               = 60
-  enable_deletion_protection = false
-
-  subnets = "${data.aws_subnet_ids.subs.ids}"
-}
-
-resource "aws_lb_target_group" "myapp" {
-  name                 = "myapp"
-  port                 = 80
-  protocol             = "HTTP"
-  # 2020/11/13現在未対応
-  # protocol_version     = "HTTP2"
-  vpc_id               = aws_vpc.locker_app_vpc.id
-  deregistration_delay = "10"
-
-  health_check {
-    protocol            = "HTTP"
-    path                = "/"
-    port                = 80
-    healthy_threshold   = 5
-    unhealthy_threshold = 2
-    timeout             = 5
-    interval            = 10
-    matcher             = 200
-  }
-}
-
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.myalb.arn
-  port              = "443"
-  protocol          = "HTTPS"
-  certificate_arn   = aws_acm_certificate.cert.arn
-
-  default_action {
-    target_group_arn = aws_lb_target_group.myapp.arn
-    type             = "forward"
-  }
-}
-
-resource "aws_lb_listener_certificate" "example" {
-  listener_arn    = aws_lb_listener.front_end.arn
-  certificate_arn = aws_acm_certificate.cert.arn
-}
-
-resource "aws_lb_target_group_attachment" "myinstance" {
-  # count            = length(var.lb_target_config.instance_id)
-  target_group_arn = aws_lb_target_group.myapp.arn
-  target_id        = aws_instance.locker_app_instance.id
-  # target_id        = element(var.lb_target_config.instance_id, count.index % length(var.lb_target_config.instance_id))
-  port = 80
+  key_name   = "id_rsa"
+  public_key = file("./keys/id_rsa.pub")
 }
