@@ -33,4 +33,5 @@
 .terraform
 access.tfvars
 terraform.tfstate.backup
-.log
+*.log
+.terraform.lock.hcl
