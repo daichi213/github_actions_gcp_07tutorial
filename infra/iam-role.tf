@@ -6,6 +6,7 @@ locals {
     policy-01 = {
       name = "${var.service_name}_instance_policy"
     }
+
     profile = {
       name = "${var.service_name}_profile"
     }

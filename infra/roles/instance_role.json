@@ -8,7 +8,7 @@
             ],
             "Principal": {
                 "Service": [
-                    "ec2.amazonaws.com"
+                    "spotfleet.amazonaws.com"
                 ]
             }
         }

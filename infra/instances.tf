@@ -7,6 +7,10 @@ locals {
     name = "${var.service_name}_prod_instance"
   }
 
+  spot_instance_region = {
+    value = "${var.spot_instance_region.ap-northeast-1}"
+  }
+
 }
 
 # ====================
@@ -47,7 +51,7 @@ resource "aws_subnet" "public_1a" {
   vpc_id = aws_vpc.myapp_vpc.id
   # TODO 修正
   cidr_block        = "10.1.0.0/24"
-  availability_zone = "ap-northeast-1a"
+  availability_zone = "${local.spot_instance_region.value}a"
   # trueにするとインスタンスにパブリックIPアドレスを自動的に割り当ててくれる
   map_public_ip_on_launch = false
 
@@ -56,10 +60,10 @@ resource "aws_subnet" "public_1a" {
   }
 }
 
-resource "aws_subnet" "public_1b" {
+resource "aws_subnet" "public_1c" {
   vpc_id            = aws_vpc.myapp_vpc.id
   cidr_block        = "10.1.20.0/24"
-  availability_zone = "ap-northeast-1b"
+  availability_zone = "${local.spot_instance_region.value}c"
   # trueにするとインスタンスにパブリックIPアドレスを自動的に割り当ててくれる
   map_public_ip_on_launch = false
 
@@ -67,19 +71,6 @@ resource "aws_subnet" "public_1b" {
     Name = "public_1b"
   }
 }
-
-resource "aws_subnet" "public_1c" {
-  vpc_id            = aws_vpc.myapp_vpc.id
-  cidr_block        = "10.1.30.0/24"
-  availability_zone = "ap-northeast-1c"
-  # trueにするとインスタンスにパブリックIPアドレスを自動的に割り当ててくれる
-  map_public_ip_on_launch = false
-
-  tags = {
-    Name = "public_1c"
-  }
-}
-
 
 # ====================
 #
@@ -169,17 +160,28 @@ resource "aws_security_group_rule" "out_all" {
 # Elastic IP
 #
 # ====================
-resource "aws_eip" "dev_eip" {
-  instance   = aws_spot_fleet_request.spot_instance_dev.id
-  vpc        = true
-  depends_on = [aws_internet_gateway.internet_gw]
-}
+# resource "aws_eip" "dev_eip" {
+#   instance   = aws_spot_fleet_request.spot_instance_dev.id
+#   vpc        = true
+#   depends_on = [aws_internet_gateway.internet_gw, aws_spot_fleet_request.spot_instance_dev]
+# }
 
-resource "aws_eip" "prod_eip" {
-  instance   = aws_spot_fleet_request.spot_instance_prod.id
-  vpc        = true
-  depends_on = [aws_internet_gateway.internet_gw]
-}
+# resource "aws_eip" "prod_eip" {
+#   instance   = aws_spot_fleet_request.spot_instance_prod.id
+#   vpc        = true
+#   depends_on = [aws_internet_gateway.internet_gw]
+# }
+
+# ====================
+#
+# Elastic IP Association
+#
+# ====================
+# resource "aws_eip_association" "dev_eip_assoc" {
+#   instance_id   = aws_spot_fleet_request.spot_instance_dev.id
+#   allocation_id = aws_eip.dev_eip.id
+# }
+
 # ====================
 #
 # EC2 Instance Develop
@@ -232,7 +234,7 @@ resource "aws_spot_fleet_request" "spot_instance_dev" {
   # spot_price      = "0.1290" # Max Price デフォルトはOn-demand Price
   target_capacity                     = var.spot_instance_num
   terminate_instances_with_expiration = true
-  wait_for_fulfillment                = "true" # fulfillするまでTerraformが待つ
+  wait_for_fulfillment                = true # fulfillするまでTerraformが待つ
 
   launch_specification {
     ami                         = var.spot_instance_ami
@@ -247,7 +249,7 @@ resource "aws_spot_fleet_request" "spot_instance_dev" {
       volume_type = var.gp2_volume_type
     }
 
-    tags {
+    tags = {
       Name = local.dev_instance.name
     }
   }
@@ -258,32 +260,32 @@ resource "aws_spot_fleet_request" "spot_instance_dev" {
 # EC2 Spot Instance Production
 #
 # ====================
-resource "aws_spot_fleet_request" "spot_instance_prod" {
-  iam_fleet_role = aws_iam_role.instance_role.arn
+# resource "aws_spot_fleet_request" "spot_instance_prod" {
+#   iam_fleet_role = aws_iam_role.instance_role.arn
 
-  # spot_price      = "0.1290" # Max Price デフォルトはOn-demand Price
-  target_capacity                     = var.spot_instance_num
-  terminate_instances_with_expiration = true
-  wait_for_fulfillment                = "true" # fulfillするまでTerraformが待つ
+#   # spot_price      = "0.1290" # Max Price デフォルトはOn-demand Price
+#   target_capacity                     = var.spot_instance_num
+#   terminate_instances_with_expiration = true
+#   wait_for_fulfillment                = "true" # fulfillするまでTerraformが待つ
 
-  launch_specification {
-    ami                         = var.spot_instance_ami
-    instance_type               = var.spot_instance_type
-    key_name                    = aws_key_pair.my_key_pair.key_name
-    vpc_security_group_ids      = ["${aws_security_group.security_rule.id}"]
-    subnet_id                   = aws_subnet.public_1a.id
-    associate_public_ip_address = true
+#   launch_specification {
+#     ami                         = var.spot_instance_ami
+#     instance_type               = var.spot_instance_type
+#     key_name                    = aws_key_pair.my_key_pair.key_name
+#     vpc_security_group_ids      = ["${aws_security_group.security_rule.id}"]
+#     subnet_id                   = aws_subnet.public_1a.id
+#     associate_public_ip_address = true
 
-    root_block_device {
-      volume_size = var.gp2_volume_size
-      volume_type = var.gp2_volume_type
-    }
+#     root_block_device {
+#       volume_size = var.gp2_volume_size
+#       volume_type = var.gp2_volume_type
+#     }
 
-    tags {
-      Name = local.prod_instance.name
-    }
-  }
-}
+#     tags = {
+#       Name = local.prod_instance.name
+#     }
+#   }
+# }
 
 # ====================
 #
@@ -293,4 +295,13 @@ resource "aws_spot_fleet_request" "spot_instance_prod" {
 resource "aws_key_pair" "my_key_pair" {
   key_name   = "id_rsa"
   public_key = file("./keys/id_rsa.pub")
+}
+
+# ====================
+#
+# Data Instance
+#
+# ====================
+data "aws_instances" "instances" {
+  instance_state_names = ["running", "stopped"]
 }

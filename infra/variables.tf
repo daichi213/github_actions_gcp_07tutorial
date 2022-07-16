@@ -11,6 +11,8 @@ variable "aws_region" {}
 variable "service_name" {}
 
 # Spot Instance number
+variable "spot_instance_region" {}
+
 variable "spot_instance_num" {}
 
 variable "spot_instance_ami" {}
