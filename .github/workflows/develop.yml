@@ -13,8 +13,8 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
     # For Debugging
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
+    # - name: Setup tmate session
+    #   uses: mxschmitt/action-tmate@v3
 
     - name: Building the Docker Container
       run: |
@@ -59,5 +59,11 @@ jobs:
   #   - name: Deploy to the Development server via ssh
   #     run: |
   #       echo "Logging in the Development server via ssh..."
-  #       ssh ec2-user@${DEVELOPMENT_PUBLIC_IP} 'date;hostname;sudo su;whoami;'
+  #       ssh ec2-user@${DEVELOPMENT_PUBLIC_IP} 'apt update;
+            # apt install apt-transport-https ca-certificates curl gnupg-agent software-properties-common;
+            # curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key  add -;
+            # add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable";
+            # apt update;
+            # apt install docker-ce;
+            # docker --version;'
   #       echo "Logged in successfully the Development server via ssh!"
