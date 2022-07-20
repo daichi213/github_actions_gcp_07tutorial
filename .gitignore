@@ -35,3 +35,5 @@ access.tfvars
 terraform.tfstate.backup
 *.log
 .terraform.lock.hcl
+.vagrant
+id_rsa

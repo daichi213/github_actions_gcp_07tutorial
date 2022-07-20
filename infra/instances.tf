@@ -145,6 +145,16 @@ resource "aws_security_group_rule" "in_http" {
   protocol          = "tcp"
 }
 
+# インバウンドルール(Develop httpアクセス用)
+resource "aws_security_group_rule" "in_http_dev" {
+  security_group_id = aws_security_group.security_rule.id
+  type              = "ingress"
+  cidr_blocks       = ["0.0.0.0/0"]
+  from_port         = 3000
+  to_port           = 3000
+  protocol          = "tcp"
+}
+
 # アウトバウンドルール(全開放)
 resource "aws_security_group_rule" "out_all" {
   security_group_id = aws_security_group.security_rule.id

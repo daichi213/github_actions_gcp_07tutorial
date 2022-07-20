@@ -1,8 +1,8 @@
 # The encounting errors with Github actions
 
-## APPコンテナからDBコンテナへの接続エラー
+## APP コンテナから DB コンテナへの接続エラー
 
-RailsをbuildしているappコンテナからMySQLをbuildしているdbコンテナへ接続を行い、テスト環境の作成コマンドを作成していたが以下のようなエラーに遭遇してしまった。
+Rails を build している app コンテナから MySQL を build している db コンテナへ接続を行い、テスト環境の作成コマンドを作成していたが以下のようなエラーに遭遇してしまった。
 
 ```bash
 $ docker-compose exec -T app rails db:create
@@ -14,16 +14,17 @@ ActiveRecord::ConnectionNotEstablished: Can't connect to MySQL server on 'db' (1
 
 ### 対応
 
-[Dockerで構築したRailsアプリをGitHub Actionsで高速にCIする為のプラクティス（Rails 6 API編）](https://qiita.com/jpshadowapps/items/f32314ba827510cfe504)のセットアップでコンテナがLISTENを開始するまで処理を待機させることができるMWが紹介されていたので、参考にさせていただいた。
+[Docker で構築した Rails アプリを GitHub Actions で高速に CI する為のプラクティス（Rails 6 API 編）](https://qiita.com/jpshadowapps/items/f32314ba827510cfe504)のセットアップでコンテナが LISTEN を開始するまで処理を待機させることができる MW が紹介されていたので、参考にさせていただいた。
 
 ### ハマったポイント
-そもそもコンテナが起動していればLISTENも完了していると思い込んでいたため、原因の絞り込みまで行えていなかった。また、[SSHデバッグ](https://zenn.dev/luma/articles/21e66e11cc4aa8d0f9ae)を使用して原因の調査は行っていたが、原因の絞り込みすらうまくいっていなかった。
+
+そもそもコンテナが起動していれば LISTEN も完了していると思い込んでいたため、原因の絞り込みまで行えていなかった。また、[SSH デバッグ](https://zenn.dev/luma/articles/21e66e11cc4aa8d0f9ae)を使用して原因の調査は行っていたが、原因の絞り込みすらうまくいっていなかった。
 
 ## Terraform
 
 ### Debugging
 
-[以下のように環境変数を設定することで、terraformコマンド実行時にデバッグモードで起動することができる](https://qiita.com/kuwa_tw/items/15e80ecb9b23a11f537e)。windowsの場合は、OSを再起動しなければ反映されないため、以下のコマンド実行後にOSの再起動を実施する必要がある。
+[以下のように環境変数を設定することで、terraform コマンド実行時にデバッグモードで起動することができる](https://qiita.com/kuwa_tw/items/15e80ecb9b23a11f537e)。windows の場合は、OS を再起動しなければ反映されないため、以下のコマンド実行後に OS の再起動を実施する必要がある。
 
 ```powershell
 setx TF_LOG 1
@@ -32,11 +33,11 @@ setx TF_LOG_PATH './terraform.log'
 
 ## git
 
-### 巨大なファイルを誤ってpushした際の対処
+### 巨大なファイルを誤って push した際の対処
 
-gitでは100MB以上のファイルはリモートレポジトリへpushできないが、今回誤って追跡対象から外す前にリモートレポジトリへpushしてしまい、かなりハマってしまったためその対処方法をメモしておく。
-この時点で、`git rm --cached`や.gitignoreへの記載などは行っていたが、現在のステージングに問題となっているterraformのexeファイルが追跡から外れていなかったためエラーが解決しなかった。`git status`で確認してもファイルが見つからなかったため、原因把握までに時間が掛かってしまった。
-具体的には[誤って100MB以上のファイルをpushした際の対処](https://qiita.com/ffggss/items/b61e726bc8cbd3137956)を参考にして解決したが、この記事では`git reset --hard`を使用しているため、誤って削除してはならないファイルまで削除してしまう危険性があるため、hardオプションをsoftオプションへ変更した方が安全。
+git では 100MB 以上のファイルはリモートレポジトリへ push できないが、今回誤って追跡対象から外す前にリモートレポジトリへ push してしまい、かなりハマってしまったためその対処方法をメモしておく。
+この時点で、`git rm --cached`や.gitignore への記載などは行っていたが、現在のステージングに問題となっている terraform の exe ファイルが追跡から外れていなかったためエラーが解決しなかった。`git status`で確認してもファイルが見つからなかったため、原因把握までに時間が掛かってしまった。
+具体的には[誤って 100MB 以上のファイルを push した際の対処](https://qiita.com/ffggss/items/b61e726bc8cbd3137956)を参考にして解決したが、この記事では`git reset --hard`を使用しているため、誤って削除してはならないファイルまで削除してしまう危険性があるため、hard オプションを soft オプションへ変更した方が安全。
 具体的に、以下のようなエラーが発生していた。
 
 ```powershell
@@ -56,16 +57,17 @@ remote: error: File infra/.terraform/providers/registry.terraform.io/hashicorp/a
 ### 対処
 
 今回の根本的な原因はステージに巨大ファイルが残ってしまっていたことが原因だったため、以下の方法で巨大ファイルをステージから除外した。
+
 - `git reset`によるステージの巻き戻し
-    - 巻き戻しは`git log`コマンドを使用して巻き戻すステージのCOMMIT IDを取得して`git reset --soft <HEADとしたいcommit id>`でリセットする
-    - ステージが一つ前であれば`git reset --soft HEAD^`コマンドでも戻せる
+  - 巻き戻しは`git log`コマンドを使用して巻き戻すステージの COMMIT ID を取得して`git reset --soft <HEADとしたいcommit id>`でリセットする
+  - ステージが一つ前であれば`git reset --soft HEAD^`コマンドでも戻せる
 - `git gc`により参照ログから巨大ファイルが残らないように削除する
 - `git rm --cached`によるキャッシュファイルの削除
-    - `git status`を実行するかvscode上でステージされたファイルとなっていなければOK
-    - このコマンドは`git add .`によりindexへ追加したファイルを削除する。そのため、`git add`していなければnot foundになる。
-- .gitignoreへ追跡除外対象ファイルの記載
-    - log拡張子を除外するために、`.log`で記載していたが他の記載も無効になってしまっていた。
-    - ＊を含めて指定することでしっかりと除外できた。
+  - `git status`を実行するか vscode 上でステージされたファイルとなっていなければ OK
+  - このコマンドは`git add .`により index へ追加したファイルを削除する。そのため、`git add`していなければ not found になる。
+- .gitignore へ追跡除外対象ファイルの記載
+  - log 拡張子を除外するために、`.log`で記載していたが他の記載も無効になってしまっていた。
+  - ＊を含めて指定することでしっかりと除外できた。
 
 #### 解決した際のコマンドログ
 
@@ -256,13 +258,13 @@ The list of available updates is more than a week old.
 To check for new updates run: sudo apt update
 
 
-PS C:\Users\besta\app\github_actions_gcp_07tutorial> git rm --cached .      
+PS C:\Users\besta\app\github_actions_gcp_07tutorial> git rm --cached .
 fatal: not removing '.' recursively without -r
 PS C:\Users\besta\app\github_actions_gcp_07tutorial> git rm --cached -r .
 rm '.github/workflows/deploy.yml'
-rm '.github/workflows/develop.yml'        
+rm '.github/workflows/develop.yml'
 rm '.github/workflows/subflows/deploy.yml'
-rm '.github/workflows/subflows/test.yml'  
+rm '.github/workflows/subflows/test.yml'
 rm '.github/workflows/test.yml'
 rm '.gitignore'
 rm 'README.md'
@@ -384,7 +386,7 @@ Date:   Thu Jul 14 22:28:18 2022 +0900
 
     add the infra codes
 PS C:\Users\besta\app\github_actions_gcp_07tutorial> git add .
-PS C:\Users\besta\app\github_actions_gcp_07tutorial> git commit -m "update the gitignore file" 
+PS C:\Users\besta\app\github_actions_gcp_07tutorial> git commit -m "update the gitignore file"
 [develop ae170cf] update the gitignore file
  1 file changed, 2 insertions(+), 1 deletion(-)
 PS C:\Users\besta\app\github_actions_gcp_07tutorial> git push origin develop
@@ -397,5 +399,104 @@ Total 3 (delta 2), reused 0 (delta 0), pack-reused 0
 remote: Resolving deltas: 100% (2/2), completed with 2 local objects.
 To https://github.com/daichi213/github_actions_gcp_07tutorial.git
    33b0737..ae170cf  develop -> develop
-PS C:\Users\besta\app\github_actions_gcp_07tutorial> 
+PS C:\Users\besta\app\github_actions_gcp_07tutorial>
+```
+
+## vagrant エラー
+
+vagrant コマンドを実行した際に以下のように Encoding エラーが発生した。
+
+```powershell
+PS C:\Users\besta\app\github_actions_gcp_07tutorial\server_conf\vagrant> vagrant
+Traceback (most recent call last):
+        30: from C:/HashiCorp/Vagrant/embedded/gems/2.2.19/gems/vagrant-2.2.19/bin/vagrant:194:in `<main>'
+        29: from C:/HashiCorp/Vagrant/embedded/gems/2.2.19/gems/vagrant-2.2.19/bin/vagrant:194:in `new'
+        28: from C:/HashiCorp/Vagrant/embedded/gems/2.2.19/gems/vagrant-2.2.19/lib/vagrant/environment.rb:178:in `initialize'
+        27: from C:/HashiCorp/Vagrant/embedded/gems/2.2.19/gems/vagrant-2.2.19/lib/vagrant/environment.rb:984:in `process_configured_plugins
+        26: from C:/HashiCorp/Vagrant/embedded/gems/2.2.19/gems/vagrant-2.2.19/lib/vagrant/environment.rb:956:in `find_configured_plugins'
+        25: from C:/HashiCorp/Vagrant/embedded/gems/2.2.19/gems/vagrant-2.2.19/lib/vagrant/environment.rb:944:in `guess_provider'
+        24: from C:/HashiCorp/Vagrant/embedded/gems/2.2.19/gems/vagrant-2.2.19/lib/vagrant/environment.rb:347:in `default_provider'
+        23: from C:/HashiCorp/Vagrant/embedded/gems/2.2.19/gems/vagrant-2.2.19/lib/vagrant/registry.rb:48:in `each'
+        22: from C:/HashiCorp/Vagrant/embedded/gems/2.2.19/gems/vagrant-2.2.19/lib/vagrant/registry.rb:48:in `each'
+        21: from C:/HashiCorp/Vagrant/embedded/gems/2.2.19/gems/vagrant-2.2.19/lib/vagrant/registry.rb:49:in `block in each'
+        20: from C:/HashiCorp/Vagrant/embedded/gems/2.2.19/gems/vagrant-2.2.19/lib/vagrant/environment.rb:361:in `block in default_provider'
+        19: from C:/HashiCorp/Vagrant/embedded/gems/2.2.19/gems/vagrant-2.2.19/plugins/providers/hyperv/provider.rb:20:in `usable?'
+        18: from C:/HashiCorp/Vagrant/embedded/gems/2.2.19/gems/vagrant-2.2.19/lib/vagrant/util/platform.rb:84:in `windows_admin?'
+        17: from C:/HashiCorp/Vagrant/embedded/gems/2.2.19/gems/vagrant-2.2.19/lib/vagrant/util/platform.rb:82:in `block in windows_admin?'
+        16: from C:/HashiCorp/Vagrant/embedded/gems/2.2.19/gems/vagrant-2.2.19/lib/vagrant/util/powershell.rb:113:in `execute_cmd'
+        15: from C:/HashiCorp/Vagrant/embedded/gems/2.2.19/gems/vagrant-2.2.19/lib/vagrant/util/powershell.rb:212:in `validate_install!'
+        14: from C:/HashiCorp/Vagrant/embedded/gems/2.2.19/gems/vagrant-2.2.19/lib/vagrant/util/powershell.rb:191:in `version'
+        13: from C:/HashiCorp/Vagrant/embedded/gems/2.2.19/gems/vagrant-2.2.19/lib/vagrant/util/subprocess.rb:22:in `execute'
+        12: from C:/HashiCorp/Vagrant/embedded/gems/2.2.19/gems/vagrant-2.2.19/lib/vagrant/util/subprocess.rb:154:in `execute'
+        11: from C:/HashiCorp/Vagrant/embedded/gems/2.2.19/gems/vagrant-2.2.19/lib/vagrant/util/safe_chdir.rb:24:in `safe_chdir'
+        10: from C:/HashiCorp/Vagrant/embedded/gems/2.2.19/gems/vagrant-2.2.19/lib/vagrant/util/safe_chdir.rb:24:in `synchronize'
+         9: from C:/HashiCorp/Vagrant/embedded/gems/2.2.19/gems/vagrant-2.2.19/lib/vagrant/util/safe_chdir.rb:25:in `block in safe_chdir'
+         6: from C:/HashiCorp/Vagrant/embedded/gems/2.2.19/gems/vagrant-2.2.19/lib/vagrant/util/subprocess.rb:155:in `block in execute'
+         5: from C:/HashiCorp/Vagrant/embedded/gems/2.2.19/gems/childprocess-4.1.0/lib/childprocess/abstract_process.rb:81:in `start'
+         4: from C:/HashiCorp/Vagrant/embedded/gems/2.2.19/gems/childprocess-4.1.0/lib/childprocess/windows/process.rb:70:in `launch_process
+         3: from C:/HashiCorp/Vagrant/embedded/gems/2.2.19/gems/childprocess-4.1.0/lib/childprocess/windows/process_builder.rb:28:in `start'
+         2: from C:/HashiCorp/Vagrant/embedded/gems/2.2.19/gems/childprocess-4.1.0/lib/childprocess/windows/process_builder.rb:67:in `createter'
+         1: from C:/HashiCorp/Vagrant/embedded/gems/2.2.19/gems/childprocess-4.1.0/lib/childprocess/windows/process_builder.rb:44:in `to_wid
+```
+
+### 原因
+
+[以下のようにコンソールの文字コードを SHIFT JIT へ変更することによって解決した。](https://qiita.com/yukinissie/items/969db7110845f66e80ec)
+[POWERSHELL の場合は以下のようにして変更する。](https://qiita.com/Yorcna/items/d015ebe4fae50882e3a1)
+
+```
+PS C:\Users\besta\app\github_actions_gcp_07tutorial> $OutputEncoding.EncodingName
+US-ASCII
+PS C:\Users\besta\app\github_actions_gcp_07tutorial> $OutputEncoding = [console]::OutputEncoding;
+PS C:\Users\besta\app\github_actions_gcp_07tutorial> $OutputEncoding.EncodingName
+日本語 (シフト JIS)
+PS C:\Users\besta\app\github_actions_gcp_07tutorial\server_conf\vagrant> vagrant status
+Current machine states:
+
+ansible                   not created (virtualbox)
+jenkins                   not created (virtualbox)
+
+This environment represents multiple VMs. The VMs are all listed
+above with their current state. For more information about a specific
+VM, run `vagrant status NAME`.
+```
+
+## Ansible で apt install する際の Not found
+
+Ansible で docker をインストールする設定を Playbook で以下のように行っていた。
+
+```yml
+---
+- name: add docker apt repository
+  apt_repository:
+    update_cache: yes
+    # repo: deb https://pkg.jenkins.io/debian-stable binary/
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu jammy stable/"
+    state: present
+
+- name: be sure docker-ce repository is installed
+  apt:
+    update_cache: yes
+    name:
+      - docker-ce
+```
+
+### 原因
+
+Playbook を実行した際に、以下のようなエラーが発生し、docker-ce のインストールに失敗した。
+
+```bash
+...
+TASK [common : be sure docker-ce repository is installed] **********************************************************************************fatal: [192.168.17.2]: FAILED! => {"changed": false, "msg": "No package matching 'docker-ce' is available"}
+...
+```
+
+ansible の apt_repository は直下に存在するパッケージファイルのみしか読み込まないため、以下のように設定を修正することでエラーを解決した。
+
+```yml
+- name: add docker apt repository
+  apt_repository:
+    update_cache: yes
+    repo: "deb https://download.docker.com/linux/ubuntu jammy stable binary-amd64/"
+    state: present
 ```

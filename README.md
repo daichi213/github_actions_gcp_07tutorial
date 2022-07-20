@@ -1,24 +1,26 @@
 # README
 
-## APP実行手順
+## APP 実行手順
 
 ### Infrastructure
 
-1. 以下、リソースへの権限を持つIAMユーザーを作成する
+1. 以下、リソースへの権限を持つ IAM ユーザーを作成する
 
-2. TerraformからAWS上へアクセスするためのIAMユーザーの設定を行う
+2. Terraform から AWS 上へアクセスするための IAM ユーザーの設定を行う
+
 - 設定パターン１（コマンド実行時に毎回入力しなくてもよく便利）
-terraform.tfvarsへ以下の変数へ取得したアクセスキーとシークレットキーを設定する。
-※ただし、このファイルは.gitignoreにて追跡除外設定を行っていないため絶対にpublic repositoryへpushしないようにする
+  terraform.tfvars へ以下の変数へ取得したアクセスキーとシークレットキーを設定する。
+  ※ただし、このファイルは.gitignore にて追跡除外設定を行っていないため絶対に public repository へ push しないようにする
+
 ```tfvars
 aws_access_key = "AKIA5KZDAAKDDPSB7UGJ"
 aws_secret_key = "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"
 ```
 
 - 設定パターン２
-特に設定を行わないパターンこの場合、`terraform apply`などの実行時にアクセスキーとシークレットキーが毎回入力する必要がある。しかし、クリティカルな情報をファイルに保持しないためうっかり事故を起こすことは避けられる。
+  特に設定を行わないパターンこの場合、`terraform apply`などの実行時にアクセスキーとシークレットキーが毎回入力する必要がある。しかし、クリティカルな情報をファイルに保持しないためうっかり事故を起こすことは避けられる。
 
-3. AWS上に開発用インスタンスを作成する
+3. AWS 上に開発用インスタンスを作成する
 
 ```bash
 # infraディレクトリへ移動する
@@ -33,11 +35,119 @@ $ terraform apply
 $ terraform apply
 ```
 
-ここまでの手順で、AWS上にリグレッション用のインスタンスを立ち上げることができる。
+ここまでの手順で、AWS 上にリグレッション用のインスタンスを立ち上げることができる。
+
+### サーバーの構成
+
+vagrant 内に ansible を build してそこからサーバーの自動構成を実行する。
+
+```
+$ cd ../server_conf/vagrant
+$ vagrant up ansible
+$ vagrant ssh ansible
+vagrant@ubuntu2204:~$ sudo su
+root@ubuntu2204$ cd /etc/ansible/ansible
+root@ubuntu2204$ ansible-playbook -i development site.yml
+
+```
+
+## apt-repository について
+
+[Docker レポジトリ](https://download.docker.com/linux/ubuntu/dists/jammy/stable/binary-amd64/)
+apt の標準レポジトリに含まれていないライブラリは適宜レポジトリを追加する必要があるが、その際のレポジトリ追加方法をメモする。
+そもそも apt のレポジトリを追加する際は`/etc/apt/sources.list.d/`配下にレポジトリ情報が保管される。
+
+```bash
+root@ubuntu2204:/etc/ansible/ansible# cat /etc/apt/sources.list.d/archive_uri-https_download_docker_com_linux_ubuntu-jammy.list
+deb [arch=amd64] https://download.docker.com/linux/ubuntu jammy stable
+# deb-src [arch=amd64] https://download.docker.com/linux/ubuntu jammy stable
+```
+
+上記で設定したレポジトリからパッケージ管理ライブラリである apt が以下のようなパッケージ情報が格納されているファイルを読み込む。`apt update`の場合はそれらの最新ファイルを読み込むことで新しい依存関係を読み込むことを目的とする。
+
+```
+...
+Package: docker-ce-cli
+Architecture: arm64
+Version: 5:20.10.9~3-0~debian-buster
+Priority: optional
+Section: admin
+Source: docker-ce
+Maintainer: Docker <support@docker.com>
+Installed-Size: 143685
+Depends: libc6 (>= 2.17)
+Conflicts: docker (<< 1.5~), docker-engine, docker-engine-cs, docker.io, lxc-docker, lxc-docker-virtual-package
+Breaks: docker-ce (<< 5:0)
+Replaces: docker-ce (<< 5:0)
+Filename: dists/buster/pool/stable/arm64/docker-ce-cli_20.10.9~3-0~debian-buster_arm64.deb
+Size: 34713030
+MD5sum: d3706730a428867d5a0499470b22c5ee
+SHA1: f7445b0ba72d25c47ab7d5ecbb764fe7ff622e90
+SHA256: ad3ad77dc329927902bfc6340b4b54578a684a822a5efd7d8e3013cab0b5b41b
+SHA512: c7043b6b95ebd6324e7696ee9d1fd67b84cadaf9cd4c12631fd1167879203ca4aad874eda5094e634140f83aad4755b6f7e04a77873708eed0eaafe861743976
+Homepage: https://www.docker.com
+Description: Docker CLI: the open-source application container engine
+ Docker is a product for you to build, ship and run any application as a
+ lightweight container
+ .
+ Docker containers are both hardware-agnostic and platform-agnostic. This means
+ they can run anywhere, from your laptop to the largest cloud compute instance and
+ everything in between - and they don't require you to use a particular
+ language, framework or packaging system. That makes them great building blocks
+ for deploying and scaling web apps, databases, and backend services without
+ depending on a particular stack or provider.
+ ...
+```
+
+#### add-apt-repository
+
+add-apt-repository コマンドの使用例を以下に記載する。このコマンドを使用すれば再帰的にパッケージ情報を読み込むことができる。
+
+```bash
+$ add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+# 上記コマンドは以下と等価（lsb_releaseはそれぞれの環境毎に異なる）
+$ add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu jammy stable"
+```
+
+上記のコマンドではこの[レポジトリ](https://download.docker.com/linux/ubuntu/dists/jammy/stable/)以下に存在しているパッケージ関連のファイルを再帰的にすべて読み込む。
+
+手動で add-apt-repository により apt レポジトリを追加した際の挙動
+
+```bash
+root@ubuntu2204:/etc/ansible/ansible$ add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+Repository: 'deb [arch=amd64] https://download.docker.com/linux/ubuntu jammy stable'
+Description:
+Archive for codename: jammy components: stable
+More info: https://download.docker.com/linux/ubuntu
+Adding repository.
+Press [ENTER] to continue or Ctrl-c to cancel.
+Adding deb entry to /etc/apt/sources.list.d/archive_uri-https_download_docker_com_linux_ubuntu-jammy.list
+Adding disabled deb-src entry to /etc/apt/sources.list.d/archive_uri-https_download_docker_com_linux_ubuntu-jammy.list
+Get:1 https://download.docker.com/linux/ubuntu jammy InRelease [48.9 kB]
+Get:2 https://download.docker.com/linux/ubuntu jammy/stable amd64 Packages [6,121 B]
+Hit:3 https://mirrors.edge.kernel.org/ubuntu jammy InRelease
+Get:4 https://mirrors.edge.kernel.org/ubuntu jammy-updates InRelease [114 kB]
+Get:5 https://mirrors.edge.kernel.org/ubuntu jammy-backports InRelease [99.8 kB]
+Get:6 https://mirrors.edge.kernel.org/ubuntu jammy-security InRelease [110 kB]
+Get:7 https://mirrors.edge.kernel.org/ubuntu jammy-updates/main amd64 Packages [377 kB]
+Get:8 https://mirrors.edge.kernel.org/ubuntu jammy-updates/main Translation-en [94.3 kB]
+Get:9 https://mirrors.edge.kernel.org/ubuntu jammy-updates/universe amd64 Packages [171 kB]
+Get:10 https://mirrors.edge.kernel.org/ubuntu jammy-updates/universe amd64 c-n-f Metadata [4,128 B]
+Get:11 https://mirrors.edge.kernel.org/ubuntu jammy-security/main amd64 Packages [225 kB]
+Get:12 https://mirrors.edge.kernel.org/ubuntu jammy-security/main Translation-en [54.6 kB]
+Get:13 https://mirrors.edge.kernel.org/ubuntu jammy-security/main amd64 c-n-f Metadata [3,564 B]
+Get:14 https://mirrors.edge.kernel.org/ubuntu jammy-security/restricted amd64 Packages [203 kB]
+Get:15 https://mirrors.edge.kernel.org/ubuntu jammy-security/restricted Translation-en [30.4 kB]
+Get:16 https://mirrors.edge.kernel.org/ubuntu jammy-security/universe amd64 Packages [93.5 kB]
+Get:17 https://mirrors.edge.kernel.org/ubuntu jammy-security/universe amd64 c-n-f Metadata [2,068 B]
+Fetched 1,638 kB in 3s (544 kB/s)
+Reading package lists... Done
+W: https://download.docker.com/linux/ubuntu/dists/jammy/InRelease: Key is stored in legacy trusted.gpg keyring (/etc/apt/trusted.gpg), see the DEPRECATION section in apt-key(8) for details.
+```
 
 ### SampleApp
 
-今回、CI/CDパイプラインにてデプロイするアプリはDockerを使用してRailsにて作成してます。まずは、dockerからbuildして簡単にアプリの編集をしていきましょう！
+今回、CI/CD パイプラインにてデプロイするアプリは Docker を使用して Rails にて作成してます。まずは、docker から build して簡単にアプリの編集をしていきましょう！
 
 ```bash
 # プロジェクトのルートディレクトリへ移動する
@@ -51,23 +161,24 @@ $ docker-compose up
 ```
 
 - 以下アドレスをブラウザから開き、アプリの起動に問題がないか確認する
-http://localhost:3000
+  http://localhost:3000
 
 ここまでで、コンテナによる開発環境を立ち上げることができる。
 ここで、別コマンドを開いて、コンテナへ接続する。
+
 ```bash
 $ docker-compose exec app bash
 ```
 
 ## Github action_dispatch
 
-### Workflow関連の設計方法について
+### Workflow 関連の設計方法について
 
-[GitHub ActionsにおけるStep/Job/Workflow設計論](https://zenn.dev/hsaki/articles/github-actions-component)
+[GitHub Actions における Step/Job/Workflow 設計論](https://zenn.dev/hsaki/articles/github-actions-component)
 
 ### Debugging
 
-[SSHデバッグ](https://zenn.dev/luma/articles/21e66e11cc4aa8d0f9ae)を行い、実際にCIとそのテストが行われている環境に接続してjobのrunに使用するコマンドの作成を行なった。
+[SSH デバッグ](https://zenn.dev/luma/articles/21e66e11cc4aa8d0f9ae)を行い、実際に CI とそのテストが行われている環境に接続して job の run に使用するコマンドの作成を行なった。
 
 ## Rails
 
@@ -76,20 +187,20 @@ application up and running.
 
 Things you may want to cover:
 
-* Ruby version
+- Ruby version
 
-* System dependencies
+- System dependencies
 
-* Configuration
+- Configuration
 
-* Database creation
+- Database creation
 
-* Database initialization
+- Database initialization
 
-* How to run the test suite
+- How to run the test suite
 
-* Services (job queues, cache servers, search engines, etc.)
+- Services (job queues, cache servers, search engines, etc.)
 
-* Deployment instructions
+- Deployment instructions
 
-* ...
+- ...

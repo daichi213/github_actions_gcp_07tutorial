@@ -2,41 +2,41 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ "develop" ]
+    branches: ["develop"]
   pull_request:
-    branches: [ "develop" ]
+    branches: ["develop"]
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-    # For Debugging
-    # - name: Setup tmate session
-    #   uses: mxschmitt/action-tmate@v3
+      - name: Checkout
+        uses: actions/checkout@v3
+      # For Debugging
+      # - name: Setup tmate session
+      #   uses: mxschmitt/action-tmate@v3
 
-    - name: Building the Docker Container
-      run: |
-        echo "The Container is building..."
-        docker-compose build
-        echo "The Container is successfully built!"
-        echo "Containers are building..."
-        docker-compose up -d
+      - name: Building the Docker Container
+        run: |
+          echo "The Container is building..."
+          docker-compose build
+          echo "The Container is successfully built!"
+          echo "Containers are building..."
+          docker-compose up -d
 
-    - name: Wait middleware services
-      run: docker-compose run --rm wait-middleware
+      - name: Wait middleware services
+        run: docker-compose run --rm wait-middleware
 
-    - name: Confirm docker-compose logs
-      run: docker-compose logs db
+      - name: Confirm docker-compose logs
+        run: docker-compose logs db
 
-    - name: Run the test code on Rails App with Rspec
-      run: |
-        echo "test is running..."
-        docker-compose exec -T server rails db:create
-        docker-compose exec -T server rails db:migrate
-        docker-compose exec -T server rspec
-        echo "The test is successfully finished!"
+      - name: Run the test code on Rails App with Rspec
+        run: |
+          echo "test is running..."
+          docker-compose exec -T server rails db:create
+          docker-compose exec -T server rails db:migrate
+          docker-compose exec -T server rspec
+          echo "The test is successfully finished!"
 
   # deploy:
   #   needs: [test]
@@ -44,26 +44,26 @@ jobs:
   #   env:
   #     DEVELOPMENT_PUBLIC_IP: DEVELOPMENT_PUBLIC_IP
   #   steps:
-  #   - name: Download the jq
-  #     run: |
-  #       echo "jq is downloading..."
-  #       apt-get update
-  #       apt-get install -y jq
-  #       echo "jq is successfully downloaded!"
-  #   - name: Get the dns of development server
-  #     run: |
-  #       echo "Getting the dns of development server..."
-  #       DEVELOPMENT_PUBLIC_IP=`cat terraform.tfstate.backup | jq .outputs.instance_public_ips.value[] | sed 's/"//g'`
-  #       export DEVELOPMENT_PUBLIC_IP
-  #       echo "The dns of development server is successfully get!"
-  #   - name: Deploy to the Development server via ssh
-  #     run: |
-  #       echo "Logging in the Development server via ssh..."
-  #       ssh ec2-user@${DEVELOPMENT_PUBLIC_IP} 'apt update;
-            # apt install apt-transport-https ca-certificates curl gnupg-agent software-properties-common;
-            # curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key  add -;
-            # add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable";
-            # apt update;
-            # apt install docker-ce;
-            # docker --version;'
-  #       echo "Logged in successfully the Development server via ssh!"
+  #     - name: Download the jq
+  #       run: |
+  #         echo "jq is downloading..."
+  #         apt-get update
+  #         apt-get install -y jq
+  #         echo "jq is successfully downloaded!"
+  #     - name: Get the dns of development server
+  #       run: |
+  #         echo "Getting the dns of development server..."
+  #         DEVELOPMENT_PUBLIC_IP=`cat terraform.tfstate.backup | jq .outputs.instance_public_ips.value[] | sed 's/"//g'`
+  #         export DEVELOPMENT_PUBLIC_IP
+  #         echo "The dns of development server is successfully get!"
+  #     - name: Deploy to the Development server via ssh
+  #       run: |
+  #         echo "Logging in the Development server via ssh..."
+  #         ssh ubuntu@${DEVELOPMENT_PUBLIC_IP} 'pwd;
+  #             cd ./github_actions_gcp_07tutorial;
+  #             git pull origin develop;
+  #             docker-compose stop;
+  #             docker-compose build;
+  #             docker-compose up;
+  #         '
+  #         echo "Logged in successfully the Development server via ssh!"

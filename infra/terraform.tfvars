@@ -35,10 +35,11 @@ spot_instance_region = {
 spot_instance_num = 1
 
 # Amazon Linux 2 AMI (HVM) - Kernel 5.10, SSD Volume Type
-# spot_instance_ami = "ami-004332b441f90509b"
-spot_instance_ami = "ami-0b7546e839d7ace12"
+# spot_instance_ami = "ami-0b7546e839d7ace12"
+# Ubuntu
+spot_instance_ami = "ami-07200fa04af91f087"
 
-spot_instance_type = "t2.xlarge"
+spot_instance_type = "t2.large"
 
 gp2_volume_size = "12"
 

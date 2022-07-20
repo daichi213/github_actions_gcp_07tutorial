@@ -1,0 +1,43 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+Vagrant.configure("2") do |config|
+
+  # Every Vagrant development environment requires a box. You can search for
+  # boxes at https://vagrantcloud.com/search.
+  config.vm.box = "base"
+
+  config.vm.define :ansible do |node|
+    node.vm.box = "generic/ubuntu2204"
+    node.vm.network :forwarded_port, guest: 22, host: 2211, id: "ssh"
+    node.vm.network :forwarded_port, guest: 8080, host: 8011, id: "http"
+    node.vm.network :private_network, ip: "192.168.17.1"
+    node.vm.synced_folder "./ansible", "/etc/ansible"
+    node.vm.synced_folder "../../infra/keys", "/home/vagrant/keys"
+    node.vm.synced_folder "../../infra", "/home/vagrant/infra"
+
+    node.vm.provision "shell", inline: <<-SHELL
+      apt-get update
+      apt-get install -y python3-pip jq
+      /usr/bin/pip install ansible
+      echo 'PATH=/usr/bin:$PATH' >> ~/.bashrc
+      cp -p /home/vagrant/keys/id_rsa /root/.ssh/id_rsa
+      chmod 600 /root/.ssh/id_rsa
+      chown root:root /root/.ssh/id_rsa
+
+      DEVELOPMENT_PUBLIC_IP=`cat /home/vagrant/infra/terraform.tfstate | jq .outputs.instance_public_ips.value[] | sed 's/"//g'`
+      echo "${DEVELOPMENT_PUBLIC_IP} development" >> /etc/hosts
+    SHELL
+  end
+
+  config.vm.define :development do |node|
+    node.vm.box = "generic/ubuntu2204"
+    node.vm.network :forwarded_port, guest: 22, host: 2212, id: "ssh"
+    node.vm.network :forwarded_port, guest: 8080, host: 8012, id: "http"
+    node.vm.network :private_network, ip: "192.168.17.2"
+    node.vm.synced_folder "../../infra/keys", "/home/vagrant/key"
+
+    node.vm.provision "shell", inline: <<-SHELL
+      cat /home/vagrant/key/id_rsa.pub >> /home/vagrant/.ssh/authorized_keys
+    SHELL
+  end
+end
