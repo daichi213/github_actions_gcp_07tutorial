@@ -19,6 +19,6 @@ EXPOSE 3000
 # Start the main process.
 # CMD ["rails", "server", "-b", "0.0.0.0"]
 
-COPY startup.sh ./startup.sh
-RUN chmod 744 ./startup.sh
-CMD ["./startup.sh"]
+# COPY startup.sh /startup.sh
+# RUN chmod 744 /startup.sh
+# CMD ["/startup.sh"]
