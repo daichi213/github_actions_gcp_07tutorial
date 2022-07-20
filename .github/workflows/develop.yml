@@ -22,7 +22,7 @@ jobs:
           docker-compose build
           echo "The Container is successfully built!"
           echo "Containers are building..."
-          docker-compose up -d
+          docker-compose up -d db app wait-middleware
 
       - name: Wait middleware services
         run: docker-compose run --rm wait-middleware
@@ -30,12 +30,13 @@ jobs:
       - name: Confirm docker-compose logs
         run: docker-compose logs db
       # For Debugging
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
+      # - name: Setup tmate session
+      #   uses: mxschmitt/action-tmate@v3
 
       - name: Run the test code on Rails App with Rspec
         run: |
           echo "test is running..."
+          docker-compose up -d server
           docker-compose exec -T server rspec
           echo "The test is successfully finished!"
 
