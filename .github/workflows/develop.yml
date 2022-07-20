@@ -29,6 +29,9 @@ jobs:
 
       - name: Confirm docker-compose logs
         run: docker-compose logs db
+      # For Debugging
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
 
       - name: Run the test code on Rails App with Rspec
         run: |
