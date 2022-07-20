@@ -150,8 +150,8 @@ resource "aws_security_group_rule" "in_http_dev" {
   security_group_id = aws_security_group.security_rule.id
   type              = "ingress"
   cidr_blocks       = ["0.0.0.0/0"]
-  from_port         = 3000
-  to_port           = 3000
+  from_port         = 3030
+  to_port           = 3030
   protocol          = "tcp"
 }
 
