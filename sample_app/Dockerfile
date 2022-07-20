@@ -16,8 +16,9 @@ RUN bundle install
 
 EXPOSE 3000
 
-# Make the table in development
-RUN rails db:create
-RUN rails db:migrate
 # Start the main process.
-CMD ["rails", "server", "-b", "0.0.0.0"]
+# CMD ["rails", "server", "-b", "0.0.0.0"]
+
+COPY startup.sh ./startup.sh
+RUN chmod +x ./startup.sh
+CMD ["./startup.sh"]
