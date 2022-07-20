@@ -33,8 +33,6 @@ jobs:
       - name: Run the test code on Rails App with Rspec
         run: |
           echo "test is running..."
-          # docker-compose exec -T server rails db:create
-          # docker-compose exec -T server rails db:migrate
           docker-compose exec -T server rspec
           echo "The test is successfully finished!"
 
