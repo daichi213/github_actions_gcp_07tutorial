@@ -49,8 +49,8 @@ jobs:
       - name: Download the jq
         run: |
           echo "jq is downloading..."
-          apt-get update
-          apt-get install -y jq
+          sudo apt-get update
+          sudo apt-get install -y jq
           echo "jq is successfully downloaded!"
       - name: Get the dns of development server
         run: |
