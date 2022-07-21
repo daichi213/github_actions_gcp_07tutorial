@@ -64,8 +64,8 @@ jobs:
           echo "The dns of development server is successfully get!"
           EOF
       # For Debugging
-      # - name: Setup tmate session
-      #   uses: mxschmitt/action-tmate@v3
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
       - name: Deploy to the Development server via ssh
         run: |
           sudo su <<EOF
