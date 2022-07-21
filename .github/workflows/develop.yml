@@ -44,7 +44,7 @@ jobs:
     needs: [test]
     runs-on: ubuntu-latest
     env:
-      DEVELOPMENT_PUBLIC_IP: DEVELOPMENT_PUBLIC_IP
+      SSH_KEY: ${{secrets.SSH_KEY}}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -64,13 +64,14 @@ jobs:
           echo "The dns of development server is successfully get!"
           EOF
       # For Debugging
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
+      # - name: Setup tmate session
+      #   uses: mxschmitt/action-tmate@v3
       - name: Deploy to the Development server via ssh
         run: |
+          sudo su <<EOF
           echo "Logging in the Development server via ssh..."
-          sudo echo "${secrets.SSH_KEY}" > ./infra/keys/id_rsa
-          sudo ssh -i ./infra/keys/id_rsa ubuntu@development 'sudo su;
+          echo "${SSH_KEY}" > ./infra/keys/id_rsa
+          ssh -i ./infra/keys/id_rsa ubuntu@development 'sudo su;
               cd ./github_actions_gcp_07tutorial;
               git pull origin develop;
               docker-compose stop;
@@ -78,3 +79,4 @@ jobs:
               docker-compose up -d;
           '
           echo "Logged in successfully the Development server via ssh!"
+          EOF
