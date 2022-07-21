@@ -58,10 +58,12 @@ jobs:
           EOF
       - name: Get the dns of development server
         run: |
+          sudo su <<EOF
           echo "Getting the dns of development server..."
           DEVELOPMENT_PUBLIC_IP=`cat ./infra/terraform.tfstate | jq .outputs.instance_public_ips.value[] | sed 's/"//g'`
           echo "${DEVELOPMENT_PUBLIC_IP} development" >> /etc/hosts
           echo "The dns of development server is successfully get!"
+          EOF
       # For Debugging
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
