@@ -50,15 +50,16 @@ jobs:
         uses: actions/checkout@v3
       - name: Download the jq
         run: |
+          sudo su
           echo "jq is downloading..."
-          sudo apt-get update
-          sudo apt-get install -y jq
+          apt-get update
+          apt-get install -y jq
           echo "jq is successfully downloaded!"
       - name: Get the dns of development server
         run: |
           echo "Getting the dns of development server..."
           DEVELOPMENT_PUBLIC_IP=`cat ./infra/terraform.tfstate | jq .outputs.instance_public_ips.value[] | sed 's/"//g'`
-          sudo echo "${DEVELOPMENT_PUBLIC_IP} development" >> /etc/hosts
+          echo "${DEVELOPMENT_PUBLIC_IP} development" >> /etc/hosts
           echo "The dns of development server is successfully get!"
       # For Debugging
       - name: Setup tmate session
