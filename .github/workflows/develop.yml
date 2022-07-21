@@ -55,8 +55,8 @@ jobs:
       - name: Get the dns of development server
         run: |
           echo "Getting the dns of development server..."
-          DEVELOPMENT_PUBLIC_IP=`cat terraform.tfstate.backup | jq .outputs.instance_public_ips.value[] | sed 's/"//g'`
-          export DEVELOPMENT_PUBLIC_IP
+          DEVELOPMENT_PUBLIC_IP=`cat terraform.tfstate | jq .outputs.instance_public_ips.value[] | sed 's/"//g'`
+          export ${DEVELOPMENT_PUBLIC_IP}
           echo "The dns of development server is successfully get!"
       # For Debugging
       - name: Setup tmate session
