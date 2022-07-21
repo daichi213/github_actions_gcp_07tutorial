@@ -58,7 +58,7 @@ jobs:
         run: |
           echo "Getting the dns of development server..."
           DEVELOPMENT_PUBLIC_IP=`cat ./infra/terraform.tfstate | jq .outputs.instance_public_ips.value[] | sed 's/"//g'`
-          export ${DEVELOPMENT_PUBLIC_IP}
+          echo "${DEVELOPMENT_PUBLIC_IP} development" >> /etc/hosts
           echo "The dns of development server is successfully get!"
       # For Debugging
       - name: Setup tmate session
@@ -66,7 +66,7 @@ jobs:
       - name: Deploy to the Development server via ssh
         run: |
           echo "Logging in the Development server via ssh..."
-          ssh ubuntu@${DEVELOPMENT_PUBLIC_IP} 'pwd;
+          ssh ubuntu@development 'pwd;
               cd ./github_actions_gcp_07tutorial;
               git pull origin develop;
               docker-compose stop;
