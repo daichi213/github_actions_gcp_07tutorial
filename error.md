@@ -500,3 +500,20 @@ ansible の apt_repository は直下に存在するパッケージファイル�
     repo: "deb https://download.docker.com/linux/ubuntu jammy stable binary-amd64/"
     state: present
 ```
+
+## IAMユーザーの削除エラー
+
+`terraform destroy`を実施した際に、以下のようなエラーが発生した。原因はIAMユーザーにポリシーが全くアタッチされておらず、削除の際にポリシーが自動的にアタッチされ、それがTerraform側で管理できていないことから発生した模様。
+
+```powershell
+$ terraform destroy
+...
+│ Error: Error deleting IAM User developer1: DeleteConflict: Cannot delete entity, must detach all policies first.
+│       status code: 409, request id: 6d4522b4-d6be-492e-bf1d-cd7ab2b60f5c
+│
+...
+```
+
+### 対処
+
+もともと、GroupとGroup Policyまでは作成していたが、ユーザーをグループへアタッチできていなかった。それを以下のリソースを使用してアタッチして特に問題は起こらなくなった。
