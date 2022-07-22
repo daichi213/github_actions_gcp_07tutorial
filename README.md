@@ -41,14 +41,16 @@ $ terraform apply
 
 vagrant 内に ansible を build してそこからサーバーの自動構成を実行する。
 
-```
+```bash
 $ cd ../server_conf/vagrant
 $ vagrant up ansible
 $ vagrant ssh ansible
 vagrant@ubuntu2204:~$ sudo su
 root@ubuntu2204$ cd /etc/ansible/ansible
 root@ubuntu2204$ ansible-playbook -i development site.yml
-
+# この時点でserverコンテナーが立ち上がっていないためRailsがLISTENしているポートへアクセスできない。
+# 原因はMySQLが立ち上がっていない状態でserverコンテナーを立ち上げようとして途中で処理が失敗していることによるエラーとなっている。そのため、MySQLコンテナーが立ち上がってから再度ansibleからコンテナーの立ち上げを行う。
+root@ubuntu2204$ ansible-playbook -i development site.yml
 ```
 
 ## apt-repository について

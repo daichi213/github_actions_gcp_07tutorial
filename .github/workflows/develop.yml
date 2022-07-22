@@ -65,8 +65,8 @@ jobs:
           EOF
       # For Debugging
       - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-      - name: Deploy to the Development server via ssh
+        #   uses: mxschmitt/action-tmate@v3
+        # - name: Deploy to the Development server via ssh
         run: |
           sudo su <<EOF
           echo "Logging in the Development server via ssh..."
