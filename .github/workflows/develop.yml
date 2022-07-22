@@ -63,15 +63,21 @@ jobs:
           echo "`cat ./infra/terraform.tfstate | jq .outputs.instance_public_ips.value[] | sed 's/"//g'` development" >> /etc/hosts
           echo "The dns of development server is successfully get!"
           EOF
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_KEY }}
+          name: id_rsa # optional
+          known_hosts: ${{ secrets.KNOWN_HOSTS }}
+          # config: ${{ secrets.CONFIG }} # ssh_config; optional
+          if_key_exists: fail
       # For Debugging
       - name: Setup tmate session
         #   uses: mxschmitt/action-tmate@v3
         # - name: Deploy to the Development server via ssh
         run: |
           sudo su <<EOF
-          echo "Logging in the Development server via ssh..."
-          echo "${SSH_KEY}" > ./infra/keys/id_rsa
-          ssh -i ./infra/keys/id_rsa ubuntu@development 'sudo su;
+          ssh -i ubuntu@development 'sudo su;
               cd ./github_actions_gcp_07tutorial;
               git pull origin develop;
               docker-compose stop;
