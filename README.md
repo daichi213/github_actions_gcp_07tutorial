@@ -39,6 +39,8 @@ $ terraform apply
 
 ### サーバーの構成
 
+#### 初回立ち上げ
+
 vagrant 内に ansible を build してそこからサーバーの自動構成を実行する。
 
 ```bash
@@ -51,6 +53,47 @@ root@ubuntu2204$ ansible-playbook -i development site.yml
 # この時点でserverコンテナーが立ち上がっていないためRailsがLISTENしているポートへアクセスできない。
 # 原因はMySQLが立ち上がっていない状態でserverコンテナーを立ち上げようとして途中で処理が失敗していることによるエラーとなっている。そのため、MySQLコンテナーが立ち上がってから再度ansibleからコンテナーの立ち上げを行う。
 root@ubuntu2204$ ansible-playbook -i development site.yml
+```
+
+#### github actions→serverへの接続設定
+
+github actionsから今回環境となっているEC2インスタンスに接続するためのssh関連の設定についてここに記載する。
+※今回使用した[Actionについて](https://qiita.com/shimataro999/items/b05a251c93fe6843cc16)
+
+```bash
+$ ssh-keyscan <terraform.tfstateに出力されているインスタンスのPublic IP>
+# 54.95.86.106:22 SSH-2.0-OpenSSH_8.9p1 Ubuntu-3
+54.95.86.106 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCop+YnjfRf58t0lZhyTa5iLlr9F5JV/i8dP9UE4vnem4hcMY5Xc1mvLnp8RmHmlJJLKoItpVtRR8w6SXfl6a6OR5TUygB+WYqrXGw9eQaI8rRXGaepbIAUsH9ewGFcPLb4NpdRNmi0Ilasek7opCQ2IwM8yEjNBAi/Svt9PTaMbXzkbbMrdNp5C1Zj7cRTI7Ug2z0hmJ/rad/JbOVdkEx8HkZHeQaYrFfk0+KhmqIHQNrAMMGcxyxUF/e+Euhn2hWa6nVHm/mTea/FjGIKZPAhwcD+dDL9dk0sa1SOzc+Bm8Yt+sPuGw5RB64++bT7eYTwS0ZWnsLPAKKRJ3GBLpWUUarIxTYw2KRS09tHnBjjbEOR2X9unB4SnkMIQY4wHkb/hdVgOZtFLFzoRUqKtoWNmCjUdai+1kTOQKeGzHWJDh9+2FgENMN5Zmf/1uv9LLPCidIMAPvg5cz5SH3gt2K2oolGitdjIM0FZHSSuWQl07EUzQy5DoAcn9Vgp0fZbBU=
+...
+```
+今回、使用している鍵はRSA方式のものを使用しているため、keyscanして取得した`ssh-rsa`のものをコピーしてgit側で設定する。git側で使用する際には以下の情報の先頭にactionsの仮想サーバーにて使用しているEC2インスタンスの<HOST名,>を付与する。
+
+>54.95.86.106 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCop+YnjfRf58t0lZhyTa5iLlr9F5JV/i8dP9UE4vnem4hcMY5Xc1mvLnp8RmHmlJJLKoItpVtRR8w6SXfl6a6OR5TUygB+WYqrXGw9eQaI8rRXGaepbIAUsH9ewGFcPLb4NpdRNmi0Ilasek7opCQ2IwM8yEjNBAi/Svt9PTaMbXzkbbMrdNp5C1Zj7cRTI7Ug2z0hmJ/rad/JbOVdkEx8HkZHeQaYrFfk0+KhmqIHQNrAMMGcxyxUF/e+Euhn2hWa6nVHm/mTea/FjGIKZPAhwcD+dDL9dk0sa1SOzc+Bm8Yt+sPuGw5RB64++bT7eYTwS0ZWnsLPAKKRJ3GBLpWUUarIxTYw2KRS09tHnBjjbEOR2X9unB4SnkMIQY4wHkb/hdVgOZtFLFzoRUqKtoWNmCjUdai+1kTOQKeGzHWJDh9+2FgENMN5Zmf/1uv9LLPCidIMAPvg5cz5SH3gt2K2oolGitdjIM0FZHSSuWQl07EUzQy5DoAcn9Vgp0fZbBU=
+
+
+### SampleApp
+
+今回、CI/CD パイプラインにてデプロイするアプリは Docker を使用して Rails にて作成してます。まずは、docker から build して簡単にアプリの編集をしていきましょう！
+
+```bash
+# プロジェクトのルートディレクトリへ移動する
+$ cd ../
+# compose.ymlが存在していればOK
+$ ls
+# Buildする
+$ docker-compose build
+# コンテナを立ち上げる
+$ docker-compose up
+```
+
+- 以下アドレスをブラウザから開き、アプリの起動に問題がないか確認する
+  http://localhost:3000
+
+ここまでで、コンテナによる開発環境を立ち上げることができる。
+ここで、別コマンドを開いて、コンテナへ接続する。
+
+```bash
+$ docker-compose exec app bash
 ```
 
 ## apt-repository について
@@ -145,31 +188,6 @@ Get:17 https://mirrors.edge.kernel.org/ubuntu jammy-security/universe amd64 c-n-
 Fetched 1,638 kB in 3s (544 kB/s)
 Reading package lists... Done
 W: https://download.docker.com/linux/ubuntu/dists/jammy/InRelease: Key is stored in legacy trusted.gpg keyring (/etc/apt/trusted.gpg), see the DEPRECATION section in apt-key(8) for details.
-```
-
-### SampleApp
-
-今回、CI/CD パイプラインにてデプロイするアプリは Docker を使用して Rails にて作成してます。まずは、docker から build して簡単にアプリの編集をしていきましょう！
-
-```bash
-# プロジェクトのルートディレクトリへ移動する
-$ cd ../
-# compose.ymlが存在していればOK
-$ ls
-# Buildする
-$ docker-compose build
-# コンテナを立ち上げる
-$ docker-compose up
-```
-
-- 以下アドレスをブラウザから開き、アプリの起動に問題がないか確認する
-  http://localhost:3000
-
-ここまでで、コンテナによる開発環境を立ち上げることができる。
-ここで、別コマンドを開いて、コンテナへ接続する。
-
-```bash
-$ docker-compose exec app bash
 ```
 
 ## Github action_dispatch
