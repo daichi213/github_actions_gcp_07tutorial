@@ -58,6 +58,7 @@ root@ubuntu2204$ ansible-playbook -i development site.yml
 #### github actions→serverへの接続設定
 
 github actionsから今回環境となっているEC2インスタンスに接続するためのssh関連の設定についてここに記載する。
+※今回使用した[Actionについて](https://qiita.com/shimataro999/items/b05a251c93fe6843cc16)
 
 ```bash
 $ ssh-keyscan <terraform.tfstateに出力されているインスタンスのPublic IP>
