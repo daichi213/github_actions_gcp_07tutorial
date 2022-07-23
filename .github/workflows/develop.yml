@@ -77,7 +77,7 @@ jobs:
       - name: Deploy to the Development server via ssh
         run: |
           sudo su <<EOF
-          ssh -i ubuntu@development 'sudo su;
+          ssh -T ubuntu@development 'sudo su;
               cd ./github_actions_gcp_07tutorial;
               git pull origin develop;
               docker-compose stop;
