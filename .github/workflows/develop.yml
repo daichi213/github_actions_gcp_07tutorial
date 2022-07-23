@@ -76,7 +76,7 @@ jobs:
         uses: mxschmitt/action-tmate@v3
       - name: Deploy to the Development server via ssh
         run: |
-          sudo ssh -T ubuntu@development << EOF
+          ssh -T ubuntu@development << EOF
               sudo su
               cd ./github_actions_gcp_07tutorial
               git pull origin develop
