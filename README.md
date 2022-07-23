@@ -51,14 +51,17 @@ vagrant@ubuntu2204:~$ sudo su
 root@ubuntu2204$ cd /etc/ansible/ansible
 root@ubuntu2204$ ansible-playbook -i development site.yml
 # この時点でserverコンテナーが立ち上がっていないためRailsがLISTENしているポートへアクセスできない。
-# 原因はMySQLが立ち上がっていない状態でserverコンテナーを立ち上げようとして途中で処理が失敗していることによるエラーとなっている。そのため、MySQLコンテナーが立ち上がってから再度ansibleからコンテナーの立ち上げを行う。
+# 原因はMySQLが立ち上がっていない状態でserverコンテナーを立ち上げようとして途中で処理が失敗していることによるエラーとなっている。そのため、MySQLコンテナーが立ち上がってから再度以下コマンドを実行し、ansibleからコンテナーの立ち上げを行う。
 root@ubuntu2204$ ansible-playbook -i development site.yml
 ```
 
 #### github actions→serverへの接続設定
 
-github actionsから今回環境となっているEC2インスタンスに接続するためのssh関連の設定についてここに記載する。
+github actionsから今回環境となっているEC2インスタンスに接続するためのssh関連の設定についてここに記載する。EC2インスタンスへの接続に使用する鍵はレポジトリへ直接アップできないため、github actionsの環境変数へexportしてくれる機能を利用する。
 ※今回使用した[Actionについて](https://qiita.com/shimataro999/items/b05a251c93fe6843cc16)
+
+まずは、サーバーのホスト公開鍵を以下コマンドから取得する。
+[keyscanで取得した情報は`ホスト名  キー種別  ホスト公開鍵`として取得される。](https://ttssh2.osdn.jp/manual/4/ja/setup/knownfiles.html)knwon_hostsもこれと同様の構成で登録を行えばよい。
 
 ```bash
 $ ssh-keyscan <terraform.tfstateに出力されているインスタンスのPublic IP>
@@ -66,10 +69,24 @@ $ ssh-keyscan <terraform.tfstateに出力されているインスタンスのPub
 54.95.86.106 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCop+YnjfRf58t0lZhyTa5iLlr9F5JV/i8dP9UE4vnem4hcMY5Xc1mvLnp8RmHmlJJLKoItpVtRR8w6SXfl6a6OR5TUygB+WYqrXGw9eQaI8rRXGaepbIAUsH9ewGFcPLb4NpdRNmi0Ilasek7opCQ2IwM8yEjNBAi/Svt9PTaMbXzkbbMrdNp5C1Zj7cRTI7Ug2z0hmJ/rad/JbOVdkEx8HkZHeQaYrFfk0+KhmqIHQNrAMMGcxyxUF/e+Euhn2hWa6nVHm/mTea/FjGIKZPAhwcD+dDL9dk0sa1SOzc+Bm8Yt+sPuGw5RB64++bT7eYTwS0ZWnsLPAKKRJ3GBLpWUUarIxTYw2KRS09tHnBjjbEOR2X9unB4SnkMIQY4wHkb/hdVgOZtFLFzoRUqKtoWNmCjUdai+1kTOQKeGzHWJDh9+2FgENMN5Zmf/1uv9LLPCidIMAPvg5cz5SH3gt2K2oolGitdjIM0FZHSSuWQl07EUzQy5DoAcn9Vgp0fZbBU=
 ...
 ```
-今回、使用している鍵はRSA方式のものを使用しているため、keyscanして取得した`ssh-rsa`のものをコピーしてgit側で設定する。git側で使用する際には以下の情報の先頭にactionsの仮想サーバーにて使用しているEC2インスタンスの<HOST名,>を付与する。
+今回、使用している鍵はRSA方式のものを使用しているため、keyscanして取得した`ssh-rsa`のものをコピーしてgit側で設定する。
 
->54.95.86.106 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCop+YnjfRf58t0lZhyTa5iLlr9F5JV/i8dP9UE4vnem4hcMY5Xc1mvLnp8RmHmlJJLKoItpVtRR8w6SXfl6a6OR5TUygB+WYqrXGw9eQaI8rRXGaepbIAUsH9ewGFcPLb4NpdRNmi0Ilasek7opCQ2IwM8yEjNBAi/Svt9PTaMbXzkbbMrdNp5C1Zj7cRTI7Ug2z0hmJ/rad/JbOVdkEx8HkZHeQaYrFfk0+KhmqIHQNrAMMGcxyxUF/e+Euhn2hWa6nVHm/mTea/FjGIKZPAhwcD+dDL9dk0sa1SOzc+Bm8Yt+sPuGw5RB64++bT7eYTwS0ZWnsLPAKKRJ3GBLpWUUarIxTYw2KRS09tHnBjjbEOR2X9unB4SnkMIQY4wHkb/hdVgOZtFLFzoRUqKtoWNmCjUdai+1kTOQKeGzHWJDh9+2FgENMN5Zmf/1uv9LLPCidIMAPvg5cz5SH3gt2K2oolGitdjIM0FZHSSuWQl07EUzQy5DoAcn9Vgp0fZbBU=
+#### gitの鍵登録方法
 
+1. github actionsでの環境変数の設定は「Settings > Secrets > Actions」の順にリンクを踏んで「Actions secrets
+」のタイトルの設定ページを開く。
+2. 「New repository secret」のボタンを押す。
+3. 「Actions secrets / New secret」のページが開くので、それぞれ登録を行う。
+  - SSH_KEY（EC2インスタンスへssh接続するための秘密鍵）
+    - Name : SSH_KEY
+    - Value : <github_actions_gcp_07tutorial/infra/keys/id_rsaの内容をそのままコピーして登録>
+  - KNOWN_HOSTS（開発環境のホスト公開鍵）
+    - Name : KNOWN_HOSTS
+    - Value : <以下内容>
+
+>~~54.95.86.106~~ development ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCop+YnjfRf58t0lZhyTa5iLlr9F5JV/i8dP9UE4vnem4hcMY5Xc1mvLnp8RmHmlJJLKoItpVtRR8w6SXfl6a6OR5TUygB+WYqrXGw9eQaI8rRXGaepbIAUsH9ewGFcPLb4NpdRNmi0Ilasek7opCQ2IwM8yEjNBAi/Svt9PTaMbXzkbbMrdNp5C1Zj7cRTI7Ug2z0hmJ/rad/JbOVdkEx8HkZHeQaYrFfk0+KhmqIHQNrAMMGcxyxUF/e+Euhn2hWa6nVHm/mTea/FjGIKZPAhwcD+dDL9dk0sa1SOzc+Bm8Yt+sPuGw5RB64++bT7eYTwS0ZWnsLPAKKRJ3GBLpWUUarIxTYw2KRS09tHnBjjbEOR2X9unB4SnkMIQY4wHkb/hdVgOZtFLFzoRUqKtoWNmCjUdai+1kTOQKeGzHWJDh9+2FgENMN5Zmf/1uv9LLPCidIMAPvg5cz5SH3gt2K2oolGitdjIM0FZHSSuWQl07EUzQy5DoAcn9Vgp0fZbBU=
+
+※今回、actionsのVM内でホスト名はIPアドレスではなく`development`のホスト名を使用しているため、以下のようにホスト名を修正して、登録する。名前解決は`/etc/hosts`にて実施される。
 
 ### SampleApp
 
