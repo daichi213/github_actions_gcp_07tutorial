@@ -72,17 +72,16 @@ jobs:
           # config: ${{ secrets.CONFIG }} # ssh_config; optional
           if_key_exists: fail
       # For Debugging
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
+      # - name: Setup tmate session
+      #   uses: mxschmitt/action-tmate@v3
       - name: Deploy to the Development server via ssh
         run: |
-          sudo su <<EOF
-          ssh -T ubuntu@development 'sudo su;
-              cd ./github_actions_gcp_07tutorial;
-              git pull origin develop;
-              docker-compose stop;
-              docker-compose build;
-              docker-compose up -d;
-          '
-          echo "Logged in successfully the Development server via ssh!"
+          sudo ssh -T ubuntu@development << EOF
+              sudo su
+              cd ./github_actions_gcp_07tutorial
+              git pull origin develop
+              docker-compose stop
+              docker-compose build
+              docker-compose up -d
           EOF
+          echo "Logged in successfully the Development server via ssh!"
