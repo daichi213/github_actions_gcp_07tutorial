@@ -39,7 +39,7 @@ spot_instance_num = 1
 # Ubuntu
 spot_instance_ami = "ami-07200fa04af91f087"
 
-spot_instance_type = "t2.xlarge"
+spot_instance_type = "t2.large"
 
 gp2_volume_size = "12"
 
