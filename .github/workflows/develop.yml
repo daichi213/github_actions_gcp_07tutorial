@@ -72,8 +72,8 @@ jobs:
           # config: ${{ secrets.CONFIG }} # ssh_config; optional
           if_key_exists: fail
       # For Debugging
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
+      # - name: Setup tmate session
+      #   uses: mxschmitt/action-tmate@v3
       - name: Deploy to the Development server via ssh
         run: |
           ssh -T ubuntu@development << EOF
