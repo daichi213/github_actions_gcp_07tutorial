@@ -11,5 +11,10 @@ RSpec.describe "HelloWorlds", type: :request do
       get "/hello_worlds"
       expect(response.body).to include("Hello World")
     end
+
+    it "is valid with a sentence, WealSoft" do
+      get "/hello_worlds"
+      expect(response.body).to include("WealSoft")
+    end
   end
 end
